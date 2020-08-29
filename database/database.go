@@ -126,11 +126,12 @@ func (h *Handler) UpdateCustomerHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 		return
 	}
-	cus := Customer{ID: ID}
+	cus := Customer{}
 	if err := c.ShouldBindJSON(&cus); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	cus.ID = ID
 	stmt, err := h.DB.Prepare(`UPDATE customers
 							SET name=$2, email=$3, status=$4
 							WHERE id=$1`)
@@ -139,8 +140,13 @@ func (h *Handler) UpdateCustomerHandler(c *gin.Context) {
 		return
 	}
 
-	if _, err := stmt.Exec(cus.ID, cus.Name, cus.Email, cus.Status); err != nil {
+	res, err := stmt.Exec(cus.ID, cus.Name, cus.Email, cus.Status)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		return
+	}
+	if num, err := res.RowsAffected(); err != nil || num < 1 {
+		c.JSON(http.StatusBadRequest, "ID not found")
 		return
 	}
 	c.JSON(http.StatusOK, cus)
