@@ -30,6 +30,10 @@ func (h *Handler) CreateTableHandler() {
 							email TEXT,
 							status TEXT
 						);`)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 	if _, err = stmt.Exec(); err != nil {
 		log.Fatal(err)
 		return
@@ -42,7 +46,7 @@ func (h *Handler) CreateCustomerHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 		return
 	}
-	stmt, err := h.DB.Prepare(`INSERT INTO customers(name, email, status)
+	stmt, err := h.DB.Prepare(`INSERT INTO customers (name, email, status)
 							values ($1, $2, $3)
 							RETURNING id`)
 	if err != nil {
